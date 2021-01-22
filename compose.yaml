@@ -1,0 +1,55 @@
+#Run With: "docker-compose -f compose.yaml up"
+
+version: "3.3"
+services:
+  elasticsearch:
+    image: elasticsearch:7.9.3
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      #- node.name=es01
+      #- cluster.name=es-docker-cluster
+      #- discovery.seed_hosts=es02,es03
+      #- cluster.initial_master_nodes=es01,es02,es03
+      #- bootstrap.memory_lock=true
+      #- "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - elknet
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.3
+    links:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_NAME: kibana.bcl.dev
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - elknet
+
+  # filebeat:
+  #   image: docker.elastic.co/beats/filebeat:7.10.2
+  #   links:
+  #     - elasticsearch
+  #     - kibana
+  #   #environment:
+  #   #  - ELASTICSEARCH_HOST=elasticsearch
+  #   #  - KIBANA_HOST=kibana
+  #   #  - ELASTICSEARCH_USERNAME=USER
+  #   #  - ELASTICSEARCH_PASSWORD=PASSWORD
+  #   #command: ["--strict.perms=false"]
+  #   command: filebeat -e -strict.perms=false -E output.elasticsearch.hosts=["elasticsearch:9200"]
+  #   networks:
+  #     - elknet
+
+volumes:
+  esdata01: {}
+
+networks:
+  elknet:
+    driver: bridge
